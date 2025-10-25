@@ -3,7 +3,7 @@ if (typeof browser === "undefined") {
   globalThis.browser = chrome;
 }
 
-browser.action.onClicked.addListener(async (tab) => {
+browser.browserAction.onClicked.addListener(async (tab) => {
     try {
       await browser.scripting.executeScript({
         target: {
