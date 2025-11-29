@@ -1,8 +1,3 @@
-if (typeof browser === "undefined") {
-  // Chrome does not support the browser namespace yet.
-  globalThis.browser = chrome;
-}
-
 browser.browserAction.onClicked.addListener(async (tab) => {
     try {
       await browser.scripting.executeScript({
@@ -10,9 +5,12 @@ browser.browserAction.onClicked.addListener(async (tab) => {
           tabId: tab.id,
         },
         files: [
+          "scripts/wikiTree.js",
           "scripts/extract.js"
         ],
       });
+
+      browser.tabs.sendMessage(tab.id, { action: "extractMemorials" });
     } catch (err) {
       console.error(`Failed to execute script: ${err}`);
     }
