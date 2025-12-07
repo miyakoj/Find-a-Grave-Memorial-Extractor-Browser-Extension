@@ -1,6 +1,8 @@
 # Find a Grave Memorial Extractor
 
-This Firefox (and possibly Safari) browser extension extracts a list of memorials from a Find a Grave cemetery memorial list page and saves the data in CSV format. **Note:** Find a Grave limits the number of memorials loaded on a single page to 10,000.
+**Note**: If you use the [WikiTree Browser Extension (WBE)](https://www.wikitree.com/index.php?title=Space:WikiTree_Browser_Extension) this extension is unnecessary unless you want to trigger a memorial list download from an icon in your browser toolbar. The functionality is currently only in the preview version.
+
+This Firefox (and possibly Safari) browser extension extracts a list of memorials from a Find a Grave cemetery memorial list page and saves the data in CSV format. You can filter the memorial list first by using FG's search function. **Note:** Find a Grave limits the number of memorials loaded on a single page to 10,000.
 
 This extension was developed for genealogy researchers. Here is the [extension page on WikiTree](https://www.wikitree.com/wiki/Space:FindAGrave_Memorial_Extractor_Browser_Extension). Workarounds for the FG 10,000 memorial limit can be found here.
 
@@ -26,7 +28,8 @@ For the Chromium (Chrome, Edge, and Opera) version see: https://github.com/miyak
 
 ## Installation
 
-Install from the [Firefox Add-On Store](https://addons.mozilla.org/en-US/firefox/addon/findagrave-memorial-extractor/) for Desktop Firefox and Firefox for Android.
+* Install from the [Firefox Add-On Store](https://addons.mozilla.org/en-US/firefox/addon/findagrave-memorial-extractor/) for Desktop Firefox and Firefox for Android.
+* [Download a release](https://github.com/miyakoj/Find-a-Grave-Memorial-Extractor-Browser-Extension/releases) from the releases page, extract the extension into a folder, and [follow step #2 under "Development"](https://github.com/miyakoj/Find-a-Grave-Memorial-Extractor-Browser-Extension#development).
 
 ## Usage
 
