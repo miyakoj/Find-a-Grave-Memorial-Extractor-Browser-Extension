@@ -1,4 +1,5 @@
 console.log('FindAGrave Memorial Extractor script loaded.');
+const testMemorials = [{memorialID: 5203388}, {memorialID: 5372727}];
 var options = {};
 
 browser.runtime.onMessage.addListener((message) => {
@@ -18,6 +19,8 @@ browser.runtime.onMessage.addListener((message) => {
             console.log('WikiTree check enabled: ' + options.useWikiTreeCheck);
             console.log('Debug mode enabled: ' + options.debugMode);
 
+            //if (options.debugMode) wikiTreeTest(testMemorials.map(memorial => memorial.memorialID));
+
             processMemorialList();
         });
     }
@@ -32,18 +35,26 @@ browser.runtime.onMessage.addListener((message) => {
 //   Whether or not there is a photo in general
 //   Whether or not there is a grave photo specifically
 //   Link to the memorial page
-//   A WikiTree ID if a matching profile was found (optional)
+//   Links to all matching WikiTree profiles if any were found (optional)
 function processMemorialList() {
     if (window.location.hostname.includes('findagrave.com') && window.location.pathname.includes('memorial-search')) {
         let totalPages = document.querySelector('#gotoPage') != null ? parseInt(document.querySelector('#gotoPage').getAttribute('max')) : 1;
+
+        if (options.debugMode && totalPages > 10) {
+            totalPages = 10;
+        }
 
         // auto-scroll to the bottom of the page in order to load all of the memorials if there is more than one page
         if (totalPages > 1) {
             let lastHeight = 0;
             var intervalId = setInterval(() => {
                 window.scrollTo(0, document.body.scrollHeight);
+                const totalPagesLoaded = document.querySelectorAll('.list-item-page').length;
+                if (options.debugMode) {
+                    console.log('page ' + totalPagesLoaded);
+                }
 
-                if (document.querySelectorAll('.list-item-page').length != totalPages) {
+                if (totalPagesLoaded != totalPages) {
                     lastHeight = document.body.scrollHeight;
                 }
                 else {
@@ -98,10 +109,22 @@ async function extractMemorialData() {
         }
 
         await findWTMatchesInBatches(allMemorialIDs).then((wikitreeIDs) => {
-            if (wikitreeIDs.length > 0) {
+            if (wikitreeIDs != null) {
                 extractedMemorials.forEach((memorial) => {
-                    const match = wikitreeIDs.find(item => item.memorialID.toString() === memorial.memorialID);
-                    memorial.wikiTreeIDs = match ? match.wikiTreeID : '';
+                    const memorialMatches = wikitreeIDs[memorial.memorialID];
+
+                    if (memorialMatches && memorialMatches.length > 0) {
+                        const wikitreeIDsAsUrls = memorialMatches.map(wikiTreeID => 'https://www.wikitree.com/wiki/' + wikiTreeID);
+                        memorial.wikiTreeIDs = wikitreeIDsAsUrls.join(',');
+
+                        if (options.debugMode) {
+                            console.log(wikitreeIDsAsUrls);
+                            console.log(memorial.wikiTreeIDs);
+                        }
+                    }
+                    else {
+                        memorial.wikiTreeIDs = '';
+                    }
                 });
 
                 if (options.debugMode) {
@@ -158,12 +181,61 @@ function processBirthAndDeathDates(birthAndDeathDates) {
     return processedArray;
 }
 
+async function wikiTreeTest(memorialIDs) {
+    await findWTMatchesInBatches(memorialIDs).then((wikitreeIDs) => {
+        if (wikitreeIDs != null) {
+            testMemorials.forEach((memorial) => {
+                //const match = wikitreeIDs.find(item => item.memorialID.toString() === memorial.memorialID);
+                //memorial.wikiTreeIDs = match ? match.wikiTreeID : '';
+
+                if (wikitreeIDs[memorial.memorialID].length > 0) {
+                    wikitreeIdsWithUrl = wikitreeIDs[memorial.memorialID].map(wikiTreeID => 'https://www.wikitree.com/wiki/' + wikiTreeID);
+                    memorial.wikiTreeIDs = wikitreeIdsWithUrl.join(',');
+
+                    console.log(wikitreeIdsWithUrl);
+                }
+                else {
+                    memorial.wikiTreeIDs = '';
+                }
+            });
+
+            console.log('processed memorials:');
+            console.log(testMemorials);
+        }
+        else {
+            testMemorials.map((memorial) => {
+                memorial.wikiTreeIDs = '';
+            });
+        }
+
+        let csvRows = ['WikiTree Link'];
+
+        testMemorials.forEach((memorial) => {
+            csvRows.push(`${memorial.wikiTreeIDs}`);
+        });
+
+        let csvContent = csvRows.join('\n');
+        let blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8' });
+        let url = URL.createObjectURL(blob);
+
+        let link = document.createElement('a');
+        link.setAttribute('href', url);
+
+        // replace the spaces of the cemetery page title with underscores for filename use
+        let filename = document.querySelector('.page-title').textContent.trim().replace(/ /g, '_');
+        link.setAttribute('download', filename + '.csv');
+
+        document.body.appendChild(link); // required for Firefox
+        link.click();
+    });
+}
+
 // Convert the extractedMemorials array to CSV format and download it
 function createCSV(extractedMemorials) {
     let csvRows = ['FG ID,Name,Birth Date,Death Date,Has Photo,Has Grave Photo,Memorial Link'];
 
     if (options.useWikiTreeCheck) {
-        csvRows[0] += ',WikiTree ID';
+        csvRows[0] += ',WikiTree Link';
     }
 
     extractedMemorials.forEach((memorial) => {
